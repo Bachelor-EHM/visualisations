@@ -1,0 +1,404 @@
+---
+title: "Visualizations_BA"
+author: "Matilde Jacobsen"
+date: "12/1/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+#Clean environment
+rm(list = ls())
+#Load
+pacman::p_load(readr,dplyr,tidyverse, colortools, callierr, scales)
+pacman::p_load(ggpubr, NCmisc, RColorBrewer, unikn, viridis)
+
+#Load data
+data <- read_csv("data.csv")
+
+```
+
+
+#Subsets
+```{r}
+#Rescale Chains
+data$Chain <- rescale(as.numeric(data$Chain), to = c(1, 5))
+data$Generation <- rescale(as.numeric(data$Generation), to = c(1, 15))
+data$Chain <- as.factor(data$Chain)
+
+#Rename labels
+data <- data %>% 
+  mutate(Color_label_matched = case_when(
+          Color_label_matched == "seed mustard" ~ "Seed Mustard",
+          Color_label_matched == "seed grass green" ~ "Seed Grass Green",
+          Color_label_matched == "seed ocean blue"~ "Seed Ocean Blue",
+          Color_label_matched == "seed dark rose"~ "Seed Dark Rose",
+          TRUE ~ Color_label_matched))
+
+#Datasets divided into Danish and English
+danish <- data %>% filter(Language == "Danish")
+english <- data %>% filter(Language == "English")
+
+#Subset for each condition
+cond1_danish <- danish %>% filter(Condition==1)
+cond2_danish <- danish %>% filter(Condition==2)
+cond1_english <- english %>% filter(Condition==1)
+cond2_english <- english %>% filter(Condition==2)
+
+#Subsets by color
+d_red <- danish %>% filter(Color_label_matched == "Seed Dark Rose")
+d_yellow <- danish %>% filter(Color_label_matched == "Seed Mustard")
+d_green <- danish %>% filter(Color_label_matched == "Seed Grass Green")
+d_blue <- danish %>% filter(Color_label_matched == "Seed Ocean Blue")
+
+#Subsets by color AND condition
+d_red_cond1 <- d_red %>% filter(Condition=="1")
+d_red_cond2 <- d_red %>% filter(Condition=="2")
+d_yellow_cond1 <- d_yellow %>% filter(Condition=="1")
+d_yellow_cond2 <- d_yellow %>% filter(Condition=="2")
+d_green_cond1 <- d_green %>% filter(Condition=="1")
+d_green_cond2 <- d_green %>% filter(Condition=="2")
+d_blue_cond1 <- d_blue %>% filter(Condition=="1")
+d_blue_cond2 <- d_blue %>% filter(Condition=="2")
+```
+
+#Colors
+```{r}
+show_col(viridis_pal(option = )(20))
+v2 <- inferno(20)
+v2 <- str_remove(v2, "FF")
+show_col(viridis_pal(option = "magma")(20))
+show_col(viridis_pal(option = "plasma")(20))
+
+
+
+```
+
+
+#Plots
+```{r}
+#CONDITION 1
+cond_1_hue <- ggplot(cond1_danish, aes(x = factor(Generation), y = Rel_dif, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("RHAD %") +
+  ggtitle("Condition 1")+
+  facet_wrap(~ Color_label_matched, scales = "free_x") +
+  scale_color_brewer(palette = "Dark2")+
+  theme_minimal() + theme(
+    legend.position = "none")
+cond_1_hue
+
+cond_1_sat <- ggplot(cond1_danish, aes(x = factor(Generation), y = Saturation_matched, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Saturation %") +
+  ggtitle("Condition 1")+
+  facet_wrap(~ Color_label_matched, scales = "free_x") +
+  scale_color_brewer(palette = "Dark2")+
+  theme_minimal() + theme(
+    legend.position = "none")
+cond_1_sat
+
+
+#CONDITION 2
+cond_2_hue <- ggplot(cond2_danish, aes(x = factor(Generation), y = Rel_dif, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("RHAD %") +
+  ggtitle("Condition 2")+
+  facet_wrap(~ Color_label_matched, scales = "free_x") +
+  scale_color_brewer(palette = "Dark2")+
+  theme_minimal()
+cond_2_hue
+
+cond_2_sat <- ggplot(cond2_danish, aes(x = factor(Generation), y = Saturation_matched, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Saturation %") +
+  ggtitle("Condition 2")+
+  facet_wrap(~ Color_label_matched, scales = "free_x")+
+  scale_color_brewer(palette = "Dark2")+
+  theme_minimal()
+cond_2_sat
+
+#placing them next to each other
+figure1 <- ggarrange(cond_1_hue, cond_2_hue)
+figure1 <- annotate_figure(figure1,
+               top = text_grob("Relative Hue Angle Difference (RHAD)", color = "black", face = "bold", size = 14))
+
+ggsave("figure1.png", width = 15)
+
+figure2 <- ggarrange(cond_1_sat, cond_2_sat)
+figure2 <- annotate_figure(figure2,
+               top = text_grob("Saturation", color = "black", face = "bold", size = 14))
+
+ggsave("figure2.png", width = 15)
+
+#ENGLISH
+english_hue <- ggplot(english, aes(x = Generation, y = Rel_dif, group = Condition, color = Condition))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Relative difference %") +
+  ggtitle("Plot") +
+  facet_wrap(~ Color_label_source)
+english_hue
+
+english_sat <- ggplot(english, aes(x = Generation, y = Saturation_matched, group = Condition, color = Condition))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Saturation %") +
+  ggtitle("Plot") +
+  facet_wrap(~ Color_label_source)
+english_sat
+
+
+#RED
+library(viridisLite, colorbrewer)
+install.packages("remotes")
+remotes::install_github("patrickreidy/callierr")
+library(callierr)
+d_red %>% group_by(Chain) %>% summarise(mean(Hue_matched), mean(Saturation_matched))
+callierr::as.hsl("#224455")
+
+
+red_hue<- ggplot(d_red, aes(x = Generation, y = Rel_dif, group = Chain))+
+  geom_line(stat="summary", aes(color = Chain)) +
+  expand_limits(y=0) +
+  labs(x = "Generation", 
+       y ="Relative difference %",
+       title = "Plot hue red",
+       subtitle = "Maybe relevant")+
+  facet_wrap(~ Condition) +
+  scale_color_viridis_d(begin=0.1,end=0.9,option = "C") + 
+  theme_light()
+red_hue
+
+red_sat <- ggplot(d_red, aes(x = Generation, y = Saturation_matched, group = Chain))+
+  geom_line(stat="summary", aes(color = Chain)) +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Saturation %") +
+  ggtitle("Plot saturation red") +
+  facet_wrap(~ Condition)+
+  scale_color_viridis_d(begin=0.1,end=0.9,option = "C") + 
+  theme_light()
+red_sat
+
+#YELLOW
+yellow_hue <- ggplot(d_yellow, aes(x = Generation, y = Rel_dif, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Relative difference %") +
+  ggtitle("Plot hue yellow") +
+  facet_wrap(~ Condition)+
+  scale_color_viridis_d(begin=0.7,end=1,option = "inferno") + 
+  theme_dark()
+yellow_hue
+
+yellow_sat <- ggplot(d_yellow, aes(x = Generation, y = Saturation_matched, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Saturation %") +
+  ggtitle("Plot saturation yellow") +
+  facet_wrap(~ Condition)+
+  scale_color_viridis_d(begin=0.7,end=1,option = "inferno") + 
+  theme_dark()
+yellow_sat
+
+#GREEN
+green_hue <- ggplot(d_green, aes(x = Generation, y = Rel_dif, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Relative difference %") +
+  ggtitle("Plot hue green") +
+  facet_wrap(~ Condition)+
+  scale_color_viridis_d(begin=0.3,end=0.9,option = "D") + 
+  theme_light()
+green_hue
+
+green_sat <- ggplot(d_green, aes(x = Generation, y = Saturation_matched, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Saturation %") +
+  ggtitle("Plot saturation green") +
+  facet_wrap(~ Condition)+
+  scale_color_viridis_d(begin=0.3,end=0.9,option = "D") + 
+  theme_light()
+green_sat
+
+#BLUE
+blue_hue <- ggplot(d_blue, aes(x = Generation, y = Rel_dif, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Relative difference %") +
+  ggtitle("Plot") +
+  facet_wrap(~ Condition)+
+  scale_color_brewer(palette = "Blues") + 
+  theme_light()
+blue_hue
+?scale_color_brewer()
+blue_sat <- ggplot(blue, aes(x = Generation, y = Saturation_matched, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Saturation %") +
+  ggtitle("Plot") +
+  facet_wrap(~ Condition)
+blue_sat
+
+```
+
+
+```{r}
+#Brewer color palette for plotting gender
+brew_mix <- usecol(c(rev(  brewer.pal(n = 4, name = "Reds")), 
+                     "white", brewer.pal(n = 4, name = "Blues")), n = 13)
+show_col(brew_mix)
+
+#accuracy combined
+data$Error_rate <- data$Accuracy_hue + data$Accuracy_sat
+
+
+#Plotting accuracy predicted by confidence
+##Combined
+error <- ggplot(data, aes(x = Confidence, y = Error_rate))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point(aes(color=Gender))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c(brew_mix[3], brew_mix[11], "#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Error rate",
+       title = "Error rate predicted by confidence")+
+  theme_minimal() + theme(
+    legend.position = "none")+
+  scale_x_continuous(breaks = 1:7)+
+  #scale_y_reverse()+
+  #scale_y_log10()+
+  facet_wrap(~ Color_label_matched)
+error
+ggsave("Error_rate.png")
+
+##For hue
+acc_hue <- ggplot(data, aes(x = Confidence, y = Accuracy_hue))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point(aes(color=Gender))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c(brew_mix[3], brew_mix[11], "#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Accuracy of matching hue",
+       title = "Accuracy predicted by confidence for hue matching")+
+  theme_minimal() + theme(
+    legend.position = "none")+
+  scale_x_continuous(breaks = 1:7)+
+  facet_wrap(~ Color_label_matched)
+acc_hue
+
+##For saturation
+acc_sat <- ggplot(data, aes(x = Confidence, y = Accuracy_sat))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point(aes(color=Gender))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c(brew_mix[3], brew_mix[11], "#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Accuracy of matching saturation",
+       title = "Accuracy predicted by confidence for saturation matching")+
+  theme_minimal() + theme(
+    legend.position = "none")+
+  scale_x_continuous(breaks = 1:7)+
+  facet_wrap(~ Color_label_matched)
+acc_sat
+accuracy1 <- ggarrange(acc_hue, acc_sat)
+ggsave("accuracy1.png", width = 15)
+#Without outliers
+acc_hue_no_outs <- ggplot(data_no_outliers_hue, aes(x = Confidence, y = Accuracy_hue))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point(aes(color=Gender))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c(brew_mix[3], brew_mix[11], "#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Accuracy of matching hue",
+       title = "Accuracy predicted by confidence",
+       subtitle = "Without Outliers")+
+  theme_minimal() + theme(
+    #panel.grid = element_blank(), 
+    legend.position = "none")+
+    #axis.ticks.y = element_blank())+
+  facet_wrap(~ Color_label_matched)
+acc_hue_no_outs
+ggarrange(acc_hue,acc_hue_no_outs)
+
+##By Gender
+#subsetting gender
+female <- data %>% filter(Gender=="Female")
+male <- data %>% filter(Gender=="Male")
+
+
+#Accuracy predicted by gender
+acc1_hue_f <- ggplot(female, aes(x = Confidence, y = Accuracy_hue))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point(color="red")+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Accuracy of matching hue",
+       title = "Accuracy predicted by confidence",
+       subtitle = "Female")+
+  theme_minimal() + theme(
+    legend.position = "none")+
+  ggplot2::facet_wrap(~ Color_label_matched)
+acc1_hue_f
+
+acc1_hue_m <- ggplot(male, aes(x = Confidence, y = Accuracy_hue))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point()+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Accuracy of matching hue",
+       title = "Accuracy predicted by confidence",
+       subtitle = "Male")+
+  theme_minimal() + theme(
+    legend.position = "none")+
+  ggplot2::facet_wrap(~ Color_label_matched)
+acc1_hue_m
+
+#placing them next to each other
+ggarrange(acc1_hue_f, acc1_hue_m)
+```
+
+
+Visualizing the color wheel
+
+```{r}
+callierr::as.hex(26, 1, .5)
+?as.hex
+red <- "#ff3400"
+dark_rose <- "#cc3386"
+orange <- "#ff6f00"
+yellow_red <- "#ccb233"
+yellow <- "#f5ff00"
+grass_green <- "#38cc33"
+green <- "#00ff46"
+ocean_blue <- "#33ccca"
+blue <- "#00c5ff"
+purple <- "#a200ff"
+foci <- c(red, orange, yellow_red, yellow, grass_green, green, ocean_blue, blue, purple, dark_rose)
+
+pizza(foci)
+?wheel
+```
+
+
