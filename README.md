@@ -1,2 +1,2 @@
-# visualisations
-Here we can make the visualisations we want to include in our bachelor thesis
+# Visualisations
+Script used for generating visualisations of statistical analysis for the thesis and appendix (see plots in Plots folder)
