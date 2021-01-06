@@ -1,0 +1,374 @@
+---
+title: "Visualizations_BA"
+author: "MJ, ESH, HM"
+date: "created: 12/1/2020, last updated: `r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+#Clean environment
+rm(list = ls())
+#Load
+pacman::p_load(readr,dplyr,tidyverse, colortools, callierr, scales)
+pacman::p_load(ggpubr, NCmisc, RColorBrewer, unikn, viridis, extrafont)
+#Load data
+data <- read_csv("data.csv")
+
+```
+
+
+#Subsets
+```{r}
+#As factors
+data$Subject <- as.factor(data$Subject)
+data$Language <- as.factor(data$Language)
+data$Gender <- as.factor(data$Gender)
+data$Language_spoken <- as.factor(data$Language_spoken)
+data$Condition <- as.factor(data$Condition)
+data$Chain <- as.factor(data$Chain)
+data$Color_label_source <- as.factor(data$Color_label_source)
+data$Color_label_matched <- as.factor(data$Color_label_matched)
+
+#Rename labels for prettier plots
+data <- data %>% 
+  mutate(Color_label_matched = case_when(
+          Color_label_matched == "seed mustard" ~ "Seed Mustard",
+          Color_label_matched == "seed grass green" ~ "Seed Grass Green",
+          Color_label_matched == "seed ocean blue"~ "Seed Ocean Blue",
+          Color_label_matched == "seed dark rose"~ "Seed Dark Rose",
+          TRUE ~ Color_label_matched))
+
+#Datasets divided into Danish and English
+danish <- data %>% filter(Language == "Danish")
+english <- data %>% filter(Language == "English")
+
+#Subset for each condition
+cond1_danish <- danish %>% filter(Condition==1)
+cond2_danish <- danish %>% filter(Condition==2)
+cond1_english <- english %>% filter(Condition==1)
+cond2_english <- english %>% filter(Condition==2)
+
+```
+
+
+#Plots of main hypotheses
+Included in the main thesis
+```{r}
+#DANISH CONDITION 1 - HUE
+figure5 <- ggplot(cond1_danish, aes(x = factor(Generation), y = RHAD, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("RHAD %") +
+  ggtitle("Relative Hue Angle Difference (RHAD) - Condition 1")+
+  facet_wrap(~ Color_label_matched, scales = "free_x") +
+  scale_color_brewer(palette = "Dark2")+
+  theme_minimal() + 
+  theme(
+    text=element_text(
+      family="Times"))
+cond_1_hue
+
+#DANISH CONDITION 2 HUE
+figure6 <- ggplot(cond2_danish, aes(x = factor(Generation), y = RHAD, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("RHAD %") +
+  ggtitle("Relative Hue Angle Difference (RHAD) - Condition 2")+
+  facet_wrap(~ Color_label_matched, scales = "free_x") +
+  scale_color_brewer(palette = "Dark2")+
+  theme_minimal()+
+  theme(
+    text=element_text(
+      family="Times"))
+cond_2_hue
+```
+
+Included in appendix
+```{r}
+
+#DANISH CONDITION 1 - SATURATION
+app_figure1 <- ggplot(cond1_danish, aes(x = factor(Generation), y = Saturation_matched, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Saturation %") +
+  ggtitle("Saturation Level - Condition 1")+
+  facet_wrap(~ Color_label_matched, scales = "free_x")+
+  scale_color_brewer(palette = "Dark2")+
+  theme_minimal()+
+  theme(
+    text=element_text(
+      family="Times"))
+app_figure1
+
+#DANISH CONDITION 2 - SATURATION
+app_figure2 <- ggplot(cond2_danish, aes(x = factor(Generation), y = Saturation_matched, group = Chain, color = Chain))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Saturation %") +
+  ggtitle("Saturation Level - Condition 2")+
+  facet_wrap(~ Color_label_matched, scales = "free_x")+
+  scale_color_brewer(palette = "Dark2")+
+  theme_minimal()+
+  theme(
+    text=element_text(
+      family="Times"))
+app_figure2
+```
+
+Not included
+```{r}
+#ENGLISH
+english_hue <- ggplot(english, aes(x = factor(Generation), y = RHAD, group = Condition, color = Condition))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("RHAD %") +
+  ggtitle("Relative Hue Angle Difference (RHAD) - Condition 2")+
+  facet_wrap(~ Color_label_matched, scales = "free_x") +
+  scale_color_brewer(palette = "Dark2")+
+  theme_minimal()+
+  theme(
+    text=element_text(
+      family="Times"))
+english_hue
+
+english_sat <- ggplot(english, aes(x = factor(Generation), y = Saturation_matched, group = Condition, color = Condition))+
+  geom_line(stat="summary") +
+  expand_limits(y=0) +
+  xlab("Generation") + 
+  ylab("Saturation %") +
+  ggtitle("Saturation Level - Condition 1")+
+  facet_wrap(~ Color_label_matched, scales = "free_x")+
+  scale_color_brewer(palette = "Dark2")+
+  theme_minimal()+
+  theme(
+    text=element_text(
+      family="Times"))
+english_sat
+
+```
+
+#Basic Color Term plot
+As included in appendix
+```{r}
+#loading data
+data_labled <- read.csv("color_and_name2021-01-06.csv")
+
+#BCT placement for all colors
+app_figure3 <- ggplot(data_labled, aes(x = basic_colors, fill = Color_label_matched))+
+  geom_bar(stat = "count",
+           width = 0.9,
+           position=position_dodge2(width = 0.9, preserve = "single"))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Basic color terms (BCT)", 
+       y ="Count of placement",
+       title = "Basic color terms chosen for all colors matched",
+       fill = "Seed color matched")+
+  theme_minimal()+
+  theme(
+    text=element_text(
+      family="Times"))
+app_figure3
+```
+
+For seed colors only
+```{r}
+#Subsetting first generation
+gen1 <- data_labled %>% filter(Generation == 1)
+
+#Generating plot of seed color placements
+app_figure4 <- ggplot(gen1, aes(x = basic_colors, fill = Color_label_matched))+
+  geom_bar(stat = "count",
+           width = 0.9,
+           position=position_dodge2(width = 0.9, preserve = "single"))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Basic color terms (BCT)", 
+       y ="Count of placement",
+       title = "Basic color terms chosen for seed colors",
+       fill = "Seed color matched")+
+  theme_minimal()+
+  theme(
+    text=element_text(
+      family="Times"))
+app_figure4
+```
+
+Creating the plor for dark rose placements
+```{r}
+#Rescale Generation
+data_labled$Generation <- rescale(data_labled$Generation, to = c(1, 15))
+#subsetting generation 1 red
+gen1_red <- data_labled %>% filter(Generation == 1)%>% filter(Color_label_matched == "seed dark rose")
+gen1_plot <- ggplot(gen1_red, aes(x = basic_colors, fill = Color_label_matched))+
+  geom_bar(stat = "count",
+           width = 0.9,
+           position=position_dodge2(width = 0.9, preserve = "single"))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Basic color terms (BCT)", 
+       y ="Count of placement",
+       title = "Basic color terms chosen for generation 1",
+       fill = "Seed color matched")+
+  facet_wrap(~ Language.x)+
+  theme_minimal()+
+  theme(legend.position = "none")
+
+#Subseting generation 6 and plotting
+gen6_red <- data_labled %>% filter(Generation == 6)%>% filter(Color_label_matched == "seed dark rose")
+gen6_plot <- ggplot(gen6_red, aes(x = basic_colors, fill = Color_label_matched))+
+  geom_bar(stat = "count",
+           width = 0.9,
+           position=position_dodge2(width = 0.9, preserve = "single"))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Basic color terms (BCT)", 
+       y ="Count of placement",
+       title = "Basic color terms chosen for generation 6",
+       fill = "Seed color matched")+
+  facet_wrap(~ Language.x)+
+  theme_minimal()+
+  theme(legend.position = "none")
+
+#Subseting generation 11 and plotting
+gen11_red <- data_labled %>% filter(Generation == 11)%>% filter(Color_label_matched == "seed dark rose")
+gen11_plot <- ggplot(gen11_red, aes(x = basic_colors, fill = Color_label_matched))+
+  geom_bar(stat = "count",
+           width = 0.9,
+           position=position_dodge2(width = 0.9, preserve = "single"))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Basic color terms (BCT)", 
+       y ="Count of placement",
+       title = "Basic color terms chosen for generation 11",
+       fill = "Seed color matched")+
+  facet_wrap(~ Language.x)+
+  theme_minimal()+
+  theme(legend.position = "none")
+
+#Subseting generation 15 and plotting
+gen15_red <- data_labled %>% filter(Generation == 15)%>% filter(Color_label_matched == "seed dark rose")
+gen15_plot <- ggplot(gen15_red, aes(x = basic_colors, fill = Color_label_matched))+
+  geom_bar(stat = "count",
+           width = 0.9,
+           position=position_dodge2(width = 0.9, preserve = "single"))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Basic color terms (BCT)", 
+       y ="Count of placement",
+       title = "Basic color terms chosen for generation 15",
+       fill = "Seed color matched")+
+  facet_wrap(~ Language.x)+
+  theme_minimal()+
+  theme(legend.position = "none")
+
+ggarrange(gen1_plot, gen6_plot, gen11_plot, gen15_plot)
+```
+
+
+#Error rate plots
+```{r}
+#Brewer color palette for plotting gender
+brew_mix <- usecol(c(rev(  brewer.pal(n = 4, name = "Reds")), 
+                     "white", brewer.pal(n = 4, name = "Blues")), n = 13)
+show_col(brew_mix)
+
+#Error_rate combined
+data$Error_rate <- data$Error_rate_hue + data$Error_rate_sat
+
+#Plotting Error_rate predicted by confidence
+##Combined
+error_hue <- ggplot(data, aes(x = Confidence, y = Error_rate))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point(aes(color=Gender))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c(brew_mix[3], brew_mix[11], "#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Error rate",
+       title = "Error rate predicted by confidence")+
+  theme_minimal() + theme(
+    legend.position = "none")+
+  scale_x_continuous(breaks = 1:7)+
+  #scale_y_reverse()+
+  #scale_y_log10()+
+  facet_wrap(~ Color_label_matched)
+error
+ggsave("Error_rate.png")
+```
+
+For hue and saturations seperately
+```{r}
+##For hue
+acc_hue <- ggplot(data, aes(x = Confidence, y = Error_rate_hue))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point(aes(color=Gender))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c(brew_mix[3], brew_mix[11], "#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Error_rate of matching hue",
+       title = "Error_rate predicted by confidence for hue matching")+
+  theme_minimal() + theme(
+    legend.position = "none")+
+  scale_x_continuous(breaks = 1:7)+
+  facet_wrap(~ Color_label_matched)
+acc_hue
+
+##For saturation
+acc_sat <- ggplot(data, aes(x = Confidence, y = Error_rate_sat))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point(aes(color=Gender))+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c(brew_mix[3], brew_mix[11], "#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Error_rate of matching saturation",
+       title = "Error_rate predicted by confidence for saturation matching")+
+  theme_minimal() + theme(
+    legend.position = "none")+
+  scale_x_continuous(breaks = 1:7)+
+  facet_wrap(~ Color_label_matched)
+acc_sat
+```
+
+By Gender
+```{r}
+#subsetting gender
+female <- data %>% filter(Gender=="Female")
+male <- data %>% filter(Gender=="Male")
+
+
+#Error_rate predicted by gender
+acc1_hue_f <- ggplot(female, aes(x = Confidence, y = Error_rate_hue))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point(color="red")+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Error_rate of matching hue",
+       title = "Error_rate predicted by confidence",
+       subtitle = "Female")+
+  theme_minimal() + theme(
+    legend.position = "none")+
+  ggplot2::facet_wrap(~ Color_label_matched)
+acc1_hue_f
+
+acc1_hue_m <- ggplot(male, aes(x = Confidence, y = Error_rate_hue))+
+  geom_smooth(aes(color=Color_label_matched, fill = Color_label_matched), method="lm") +
+  geom_point()+
+  scale_fill_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  scale_color_manual(values = c("#cc3386", "#38cc33", "#ccb233", "#33ccca"))+
+  labs(x = "Confidence", 
+       y ="Error_rate of matching hue",
+       title = "Error_rate predicted by confidence",
+       subtitle = "Male")+
+  theme_minimal() + theme(
+    legend.position = "none")+
+  ggplot2::facet_wrap(~ Color_label_matched)
+acc1_hue_m
+
+#placing them next to each other
+ggarrange(acc1_hue_f, acc1_hue_m)
+```
+
+
+
